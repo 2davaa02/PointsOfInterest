@@ -4,6 +4,8 @@
     <item android:id="@+id/SaveAll" android:title="@string/saveall"/>
     <item android:id="@+id/Preferences" android:title="@string/pref"/>
     <item android:id="@+id/Load" android:title="@string/load"/>
+    <item android:id="@+id/Download" android:title="@string/download"/>
+
 
 
 

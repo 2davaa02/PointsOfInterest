@@ -4,7 +4,8 @@
     <string name="save">Save</string>
     <string name="saveall">Save All POI</string>
     <string name="pref">Preference</string>
-    <string name="load">Load POI</string>
+    <string name="load">Load POI from local storage</string>
+    <string name="download">Download POI</string>
 
 
 
