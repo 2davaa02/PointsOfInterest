@@ -23,6 +23,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".AddPointOfInterest"></activity>
+        <activity android:name=".PreferencesActivity"></activity>
     </application>
 
 </manifest>

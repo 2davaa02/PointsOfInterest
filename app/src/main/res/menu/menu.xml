@@ -2,5 +2,9 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/AddPOI" android:title="@string/addpoi"/>
     <item android:id="@+id/SaveAll" android:title="@string/saveall"/>
+    <item android:id="@+id/Preferences" android:title="@string/pref"/>
+    <item android:id="@+id/Load" android:title="@string/load"/>
+
+
 
 </menu>
