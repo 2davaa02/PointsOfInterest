@@ -85,7 +85,8 @@ public class MainActivity extends AppCompatActivity {
                         type=extras.getString("com.example.newPoi_type"),
                         desc=extras.getString("com.example.newPoi_desc");
 
-                OverlayItem p=new OverlayItem(name,type,new GeoPoint(lat,lon));
+                OverlayItem p=new OverlayItem(name,desc,new GeoPoint(lat,lon));
+                
                 p.setMarker(getResources().getDrawable(R.drawable.poi));
                 items.addItem(p);
                 mv.getOverlays().add(items);
