@@ -32,14 +32,14 @@ import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
     boolean returned=false;
     boolean upload=false;
-    MapView mv;
-    double lat,lon;
-    ItemizedIconOverlay<OverlayItem> items;
+    MapFragment mapFrag;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,14 +47,8 @@ public class MainActivity extends AppCompatActivity {
 
         Configuration.getInstance().load(this, PreferenceManager.getDefaultSharedPreferences(this));
         setContentView(R.layout.activity_main);
-
-        mv = (MapView)findViewById(R.id.map1);
-        mv.setBuiltInZoomControls(true);
-
-        items = new ItemizedIconOverlay<OverlayItem>(this, new ArrayList<OverlayItem>(), null);
-        mv.getOverlays().add(items);
+        mapFrag=(MapFragment)getFragmentManager().findFragmentById(R.id.mapFrag);
     }
-
 
 
     @Override
@@ -64,20 +58,13 @@ public class MainActivity extends AppCompatActivity {
         if(!returned) {
             SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
-            mv.getController().setZoom(16);
-            mv.getController().setCenter(new GeoPoint(50.9097,-1.4044));
-
-            if(pref.getBoolean("autoupload",true))
-            {
+            if(pref.getBoolean("autoupload",true)) {
                 Toast.makeText(this, "Auto uploading", Toast.LENGTH_SHORT).show();
                 upload=true;
-
             }
-            else
-            {
+            else {
                 Toast.makeText(this, "Not uploading", Toast.LENGTH_SHORT).show();
                 upload=false;
-
             }
         }
 
@@ -86,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        new MySaveTask().execute(items);
+        mapFrag.Save();
     }
 
     @Override
@@ -101,8 +88,6 @@ public class MainActivity extends AppCompatActivity {
         returned=false;
         if(item.getItemId() == R.id.AddPOI)
         {
-            lat = mv.getMapCenter().getLatitude();
-            lon = mv.getMapCenter().getLongitude();
             Intent intent = new Intent(this,AddPointOfInterest.class);
             startActivityForResult(intent,0);
 
@@ -110,8 +95,7 @@ public class MainActivity extends AppCompatActivity {
         }
         else if(item.getItemId()==R.id.SaveAll)
         {
-            MySaveTask s=new MySaveTask();
-            s.execute(items);
+            mapFrag.Save();
             return true;
 
         }
@@ -133,8 +117,7 @@ public class MainActivity extends AppCompatActivity {
                     String[] components=line.split(",");
 
                     OverlayItem p=new OverlayItem(components[0],components[2],new GeoPoint(Double.parseDouble(components[4]),Double.parseDouble(components[3])));
-                    items.addItem(p);
-
+                    mapFrag.addMark(p);
                 }
                 reader.close();
             }
@@ -145,8 +128,12 @@ public class MainActivity extends AppCompatActivity {
         }
         else if(item.getItemId()==R.id.Download)
         {
-            MyDownloadTask t=new MyDownloadTask();
-            t.execute();
+            mapFrag.download();
+            return true;
+        }
+        else if(item.getItemId()==R.id.List)
+        {
+            return true;
         }
         return false;
     }
@@ -165,162 +152,26 @@ public class MainActivity extends AppCompatActivity {
                         type=extras.getString("com.example.newPoi_type"),
                         desc=extras.getString("com.example.newPoi_desc");
 
-                OverlayItem p=new OverlayItem(name,type,desc,new GeoPoint(lat,lon));
+                OverlayItem p=new OverlayItem(name,type,desc,new GeoPoint(mapFrag.getLat(),mapFrag.getLon()));
                 if(upload)
                 {
-                    MyUploadTask u=new MyUploadTask();
-                    u.execute(name,type,desc,String.valueOf(lat),String.valueOf(lon));
+                    mapFrag.upload(name,type,desc,mapFrag.getLat(),mapFrag.getLon());
                 }
 
-                items.addItem(p);
-                mv.getOverlays().add(items);
+                mapFrag.addMark(p);
             }
             returned=true;
         }
     }
 
-    class MySaveTask extends AsyncTask<ItemizedIconOverlay<OverlayItem>, Void, Boolean>
+    public void updateItems(ItemizedIconOverlay<OverlayItem> items)
     {
-        @Override
-        protected Boolean doInBackground(ItemizedIconOverlay<OverlayItem>... pois) {
-            try
-            {
-                String fname= Environment.getExternalStorageDirectory().getAbsolutePath() +"/poi.csv";
-                PrintWriter pw = new PrintWriter(new FileWriter(fname));
-
-
-                for(int i=0;i<pois[0].size();i++)
-                {
-                    pw.println(pois[0].getItem(i).getUid()+","+pois[0].getItem(i).getTitle()+","+pois[0].getItem(i).getSnippet()+","+pois[0].getItem(i).getPoint().getLongitude()+","+pois[0].getItem(i).getPoint().getLatitude());
-                }
-                pw.close();
-                return true;
-            }
-            catch(IOException e)
-            {
-                System.out.println ("I/O Error: " + e);
-                return false;
-            }
-        }
-
-
-
-        @Override
-        protected void onPostExecute(Boolean s)
-        {
-            super.onPostExecute(s);
-            if(s)
-            {
-                Toast.makeText(getApplicationContext(), "Saved!", Toast.LENGTH_SHORT).show();
-            }
-            else
-            {
-                Toast.makeText(getApplicationContext(), "Not saved!", Toast.LENGTH_SHORT).show();
-            }
-
-        }
-
+        ListFrag lf=(ListFrag)getFragmentManager().findFragmentById(R.id.listFrag);
+        lf.ListUpdate(items);
     }
 
-   class MyDownloadTask extends AsyncTask<Void,Void,ItemizedIconOverlay<OverlayItem>>
+    public void SetCenter(double lat,double lon)
     {
-        public ItemizedIconOverlay<OverlayItem> doInBackground(Void... unused)
-        {
-            HttpURLConnection conn = null;
-            try
-            {
-                URL url = new URL("http://www.free-map.org.uk/course/mad/ws/get.php?year=17&username=user029&format=csv");
-                conn = (HttpURLConnection) url.openConnection();
-                InputStream in = conn.getInputStream();
-
-                if(conn.getResponseCode() == 200)
-                {
-
-                    items = new ItemizedIconOverlay<OverlayItem>(MainActivity.this, new ArrayList<OverlayItem>(), null);
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-
-                    String line;
-                    while((line = reader.readLine()) != null)
-                    {
-                        String[] components = line.split(",");
-                        if(components.length==5)
-                        {
-                            OverlayItem item=new OverlayItem(components[0],components[1],components[2],new GeoPoint(Double.parseDouble(components[4]),Double.parseDouble(components[3])));
-                            items.addItem(item);
-                        }
-                    }
-
-                    return items;
-                }
-                else
-                    return null;
-
-
-            }
-            catch(IOException e)
-            {
-                return null;
-            }
-            finally
-            {
-                if(conn!=null)
-                    conn.disconnect();
-            }
-        }
-
-        public void onPostExecute(ItemizedIconOverlay<OverlayItem> items)
-        {
-            mv.getOverlays().add(items);
-        }
-    }
-
-    class MyUploadTask extends AsyncTask<String,Void,String>
-    {
-        public String doInBackground(String... strings)
-        {
-            HttpURLConnection conn = null;
-            try
-            {
-                URL url = new URL("http://www.free-map.org.uk/course/mad/ws/add.php");
-                conn = (HttpURLConnection) url.openConnection();
-
-                String postData = "username=user029&name="+strings[0]+"&type="+strings[1]+"&description="+strings[2]+"&lat="+strings[3]+"&lon="+strings[4]+"&year=17";
-                // For POST
-                conn.setDoOutput(true);
-                conn.setFixedLengthStreamingMode(postData.length());
-
-                OutputStream out = null;
-                out = conn.getOutputStream();
-                out.write(postData.getBytes());
-                if(conn.getResponseCode() == 200)
-                {
-                    InputStream in = conn.getInputStream();
-                    BufferedReader br = new BufferedReader(new InputStreamReader(in));
-                    String all = "", line;
-                    while((line = br.readLine()) !=null)
-                        all += line;
-                    return all;
-                }
-                else
-                    return "HTTP ERROR: " + conn.getResponseCode();
-            }
-            catch(IOException e)
-            {
-                return e.toString();
-            }
-            finally
-            {
-                if(conn!=null)
-                    conn.disconnect();
-            }
-        }
-
-        public void onPostExecute(String result)
-        {
-
-            new AlertDialog.Builder(MainActivity.this).
-                    setMessage("Server sent back: " + result).
-                    setPositiveButton("OK", null).show();
-        }
+        mapFrag.SetLocation(lat,lon);
     }
 }

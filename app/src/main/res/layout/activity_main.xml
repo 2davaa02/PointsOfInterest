@@ -1,16 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.example.alex.pointsofinterest.MainActivity">
 
-    <org.osmdroid.views.MapView
-        android:layout_width="match_parent"
+    <fragment
+        class="com.example.alex.pointsofinterest.MapFragment"
+        android:layout_width="0px"
         android:layout_height="match_parent"
-        android:enabled="true"
-        android:clickable="true"
-        android:id="@+id/map1"
-        tilesource="Mapnik"
-        />
-</RelativeLayout>
+        android:layout_weight="2"
+        android:id="@+id/mapFrag"
+        tools:layout="@layout/fragment_map">
+    </fragment>
+
+    <fragment
+        class="com.example.alex.pointsofinterest.ListFrag"
+        android:layout_width="0px"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:id="@+id/listFrag"
+        tools:layout="@android:layout/simple_list_item_1">
+    </fragment>
+
+
+
+
+
+
+
+</LinearLayout>
