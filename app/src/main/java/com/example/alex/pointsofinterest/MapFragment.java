@@ -90,19 +90,6 @@ public class MapFragment extends Fragment {
                 return false;
             }
         }
-        @Override
-        protected void onPostExecute(Boolean s)
-        {
-            super.onPostExecute(s);
-            if(s)
-            {
-                Toast.makeText(getActivity(), "Saved!", Toast.LENGTH_SHORT).show();
-            }
-            else
-            {
-                Toast.makeText(getActivity(), "Not saved!", Toast.LENGTH_SHORT).show();
-            }
-        }
 
     }
 
