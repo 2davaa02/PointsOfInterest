@@ -34,12 +34,22 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ListItemHandler {
 
     boolean returned=false;
     boolean upload=false;
     MapFragment mapFrag;
 
+    static ItemizedIconOverlay<OverlayItem> items;
+
+    public void handleListItemClick(int index)
+    {
+        mapFrag.SetLocation(items.getItem(index).getPoint().getLatitude(),items.getItem(index).getPoint().getLongitude());
+    }
+    public static ItemizedIconOverlay GetItems()
+    {
+        return items;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
 
     public boolean onOptionsItemSelected(MenuItem item)
     {
+        ListFrag lf=(ListFrag)getFragmentManager().findFragmentById(R.id.listFrag);
         returned=false;
         if(item.getItemId() == R.id.AddPOI)
         {
@@ -133,6 +144,9 @@ public class MainActivity extends AppCompatActivity {
         }
         else if(item.getItemId()==R.id.List)
         {
+            Intent intent = new Intent (this, ListActivity.class);
+            startActivityForResult(intent,1);
+
             return true;
         }
         return false;
@@ -162,12 +176,27 @@ public class MainActivity extends AppCompatActivity {
             }
             returned=true;
         }
+        else
+        if(requestCode==1)
+        {
+
+            if (resultCode==RESULT_OK)
+            {
+                Bundle extras=intent.getExtras();
+
+                int index=extras.getInt("com.example.index");
+
+                mapFrag.SetLocation(items.getItem(index).getPoint().getLatitude(),items.getItem(index).getPoint().getLongitude());
+            }
+            returned=true;
+        }
     }
 
     public void updateItems(ItemizedIconOverlay<OverlayItem> items)
     {
         ListFrag lf=(ListFrag)getFragmentManager().findFragmentById(R.id.listFrag);
         lf.ListUpdate(items);
+        this.items=items;
     }
 
     public void SetCenter(double lat,double lon)

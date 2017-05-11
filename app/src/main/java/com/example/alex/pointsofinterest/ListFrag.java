@@ -42,6 +42,7 @@ public class ListFrag extends ListFragment
     String[] entries;
     String[] entryValues;
     ItemizedIconOverlay<OverlayItem> itemsMap;
+    ListItemHandler handler;
 
 
 
@@ -50,24 +51,28 @@ public class ListFrag extends ListFragment
         super.onCreate(savedInstanceState);
     }
 
+    public void setListItemHandler(ListItemHandler h) {
+        handler=h;
+    }
+
     public void ListUpdate(ItemizedIconOverlay<OverlayItem> items)
     {
-        this.itemsMap=items;
-        entries=new String[items.size()];
-        entryValues=new String[items.size()];
+        if(items.size()!=0) {
+            this.itemsMap = items;
+            entries = new String[items.size()];
+            entryValues = new String[items.size()];
 
-        for(int i=0;i<items.size();i++)
-        {
-            entries[i]=items.getItem(i).getUid();
-            entryValues[i]=items.getItem(i).getSnippet();
+            for (int i = 0; i < items.size(); i++) {
+                entries[i] = items.getItem(i).getUid();
+                entryValues[i] = items.getItem(i).getSnippet();
+            }
+            MyArrayAdapter adapter = new MyArrayAdapter(getActivity(), R.layout.list_layout, entries);
+            setListAdapter(adapter);
         }
-        MyArrayAdapter adapter = new MyArrayAdapter(getActivity(),R.layout.list_layout,entries);
-        setListAdapter(adapter);
     }
     public void onListItemClick(ListView lv, View v, int index, long id)
     {
-        MainActivity activity = (MainActivity) getActivity();
-        activity.SetCenter(itemsMap.getItem(index).getPoint().getLatitude(),itemsMap.getItem(index).getPoint().getLongitude());
+        handler.handleListItemClick(index);
     }
 
     public class MyArrayAdapter extends ArrayAdapter<String>
