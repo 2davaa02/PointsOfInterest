@@ -40,6 +40,7 @@ public class MapFragment extends Fragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+
         Activity activity = getActivity();
         Configuration.getInstance().load(activity, PreferenceManager.getDefaultSharedPreferences(activity));
 
@@ -51,12 +52,14 @@ public class MapFragment extends Fragment {
 
         mv.setBuiltInZoomControls(true);
 
-        items = new ItemizedIconOverlay<OverlayItem>(activity, new ArrayList<OverlayItem>(), null);
         mv.getOverlays().add(items);
+
     }
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        items = new ItemizedIconOverlay<OverlayItem>(getActivity(), new ArrayList<OverlayItem>(), null);
+
     }
 
     public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
@@ -76,14 +79,15 @@ public class MapFragment extends Fragment {
         @Override
         protected Boolean doInBackground(ItemizedIconOverlay<OverlayItem>... pois) {
             try {
-                String fname = Environment.getExternalStorageDirectory().getAbsolutePath() + "/poi.csv";
-                PrintWriter pw = new PrintWriter(new FileWriter(fname));
-
-
-                for (int i = 0; i < pois[0].size(); i++) {
-                    pw.println(pois[0].getItem(i).getUid() + "," + pois[0].getItem(i).getTitle() + "," + pois[0].getItem(i).getSnippet() + "," + pois[0].getItem(i).getPoint().getLongitude() + "," + pois[0].getItem(i).getPoint().getLatitude());
+                    if(pois[0].size()!=0) {
+                        String fname = Environment.getExternalStorageDirectory().getAbsolutePath() + "/poi.csv";
+                        PrintWriter pw = new PrintWriter(new FileWriter(fname));
+                        for (int i = 0; i < pois[0].size(); i++)
+                        {
+                            pw.println(pois[0].getItem(i).getUid() + "," + pois[0].getItem(i).getTitle() + "," + pois[0].getItem(i).getSnippet() + "," + pois[0].getItem(i).getPoint().getLongitude() + "," + pois[0].getItem(i).getPoint().getLatitude());
+                        }
+                        pw.close();
                 }
-                pw.close();
                 return true;
             } catch (IOException e) {
                 System.out.println("I/O Error: " + e);
