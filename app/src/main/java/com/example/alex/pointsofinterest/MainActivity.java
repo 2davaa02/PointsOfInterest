@@ -53,11 +53,15 @@ public class MainActivity extends AppCompatActivity implements ListItemHandler {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ListFrag lf;
         super.onCreate(savedInstanceState);
 
         Configuration.getInstance().load(this, PreferenceManager.getDefaultSharedPreferences(this));
         setContentView(R.layout.activity_main);
         mapFrag=(MapFragment)getFragmentManager().findFragmentById(R.id.mapFrag);
+
+        lf=(ListFrag)getFragmentManager().findFragmentById(R.id.listFrag);
+        lf.setListItemHandler(this);
     }
 
 
@@ -118,23 +122,7 @@ public class MainActivity extends AppCompatActivity implements ListItemHandler {
 
         }
         else if(item.getItemId()==R.id.Load){
-            try{
-
-                FileReader fr=new FileReader(Environment.getExternalStorageDirectory().getAbsolutePath() + "/poi.csv");
-                BufferedReader reader=new BufferedReader(fr);
-                String line;
-                while((line=reader.readLine())!=null)
-                {
-                    String[] components=line.split(",");
-
-                    OverlayItem p=new OverlayItem(components[0],components[2],new GeoPoint(Double.parseDouble(components[4]),Double.parseDouble(components[3])));
-                    mapFrag.addMark(p);
-                }
-                reader.close();
-            }
-            catch (IOException e) {
-                new AlertDialog.Builder(this).setMessage("ERROR: "+e).setPositiveButton("OK",null).show();
-            }
+            mapFrag.LoadFromFile();
             return true;
         }
         else if(item.getItemId()==R.id.Download)
@@ -173,6 +161,7 @@ public class MainActivity extends AppCompatActivity implements ListItemHandler {
                 }
 
                 mapFrag.addMark(p);
+
             }
             returned=true;
         }

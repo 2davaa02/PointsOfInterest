@@ -19,6 +19,7 @@ import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.OverlayItem;
 
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,9 +49,8 @@ public class MapFragment extends Fragment {
 
         mv.getController().setZoom(16);
         mv.getController().setCenter(new GeoPoint(50.9097, -1.4044));
-
-
         mv.setBuiltInZoomControls(true);
+
 
         mv.getOverlays().add(items);
 
@@ -59,6 +59,7 @@ public class MapFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         items = new ItemizedIconOverlay<OverlayItem>(getActivity(), new ArrayList<OverlayItem>(), null);
+        LoadFromFile();
 
     }
 
@@ -93,6 +94,10 @@ public class MapFragment extends Fragment {
                 System.out.println("I/O Error: " + e);
                 return false;
             }
+            catch (NullPointerException e) {
+                System.out.println("Null pointer Error: " + e);
+                return false;
+            }
         }
 
     }
@@ -111,6 +116,8 @@ public class MapFragment extends Fragment {
     {
         items.addItem(p);
         mv.getOverlays().add(items);
+        mv.invalidate();
+
         MainActivity activity = (MainActivity) getActivity();
         activity.updateItems(items);
     }
@@ -170,6 +177,7 @@ public class MapFragment extends Fragment {
         public void onPostExecute(ItemizedIconOverlay<OverlayItem> items)
         {
             mv.getOverlays().add(items);
+            mv.invalidate();
             MainActivity activity = (MainActivity) getActivity();
             activity.updateItems(items);
         }
@@ -230,4 +238,45 @@ public class MapFragment extends Fragment {
         MyUploadTask u=new MyUploadTask();
         u.execute(name,type,desc,String.valueOf(lat),String.valueOf(lon));
     }
+
+    public void LoadFromFile()
+    {
+        MyLoadTask l=new MyLoadTask();
+        l.execute();
+    }
+    class MyLoadTask extends AsyncTask<Void,Void,Boolean>
+    {
+        public Boolean doInBackground(Void... unused)
+        {
+            HttpURLConnection conn = null;
+            try{
+
+                FileReader fr=new FileReader(Environment.getExternalStorageDirectory().getAbsolutePath() + "/poi.csv");
+                BufferedReader reader=new BufferedReader(fr);
+                String line;
+                while((line=reader.readLine())!=null)
+                {
+                    String[] components=line.split(",");
+
+                    OverlayItem p=new OverlayItem(components[0],components[1],components[2],new GeoPoint(Double.parseDouble(components[4]),Double.parseDouble(components[3])));
+                    items.addItem(p);
+                }
+                reader.close();
+            }
+            catch (IOException e) {
+                new AlertDialog.Builder(getActivity()).setMessage("ERROR: "+e).setPositiveButton("OK",null).show();
+            }
+            return true;
+        }
+
+        public void onPostExecute(Boolean b)
+        {
+            mv.getOverlays().add(items);
+            mv.invalidate();
+            MainActivity activity = (MainActivity) getActivity();
+            activity.updateItems(items);
+        }
+    }
+
+
 }
